@@ -18,11 +18,10 @@ Install [Arduino CLI](https://docs.arduino.cc/arduino-cli/installation/), Git, a
 brew install arduino-cli git python
 ```
 
-Clone this private repository using your authenticated GitHub account, then enter its folder:
+Enter the local Surplus adaptation checkout:
 
 ```sh
-git clone https://github.com/ranand12/gemini-live-agent.git
-cd gemini-live-agent
+cd /path/to/surplus-charm
 ```
 
 ## 3. Install the tested dependencies
@@ -41,7 +40,7 @@ WebSockets, codec board and ESP codec sources are bundled. The ESP32 core suppli
 cp Gemini_Live/local_config.example.h Gemini_Live/local_config.h
 ```
 
-Edit `local_config.h`: replace the example HTTPS URL with your Hermes service URL, without a trailing slash. This local file is ignored by Git. For Gemini-only operation, leave the example URL and skip Hermes credential configuration. Hermes requires a compatible separate backend; see [setup](SETUP.md).
+Edit `local_config.h`: set `BRIDGE_HOST` and `BRIDGE_PORT` for your TLS-enabled bridge. The local file is ignored by Git. See [Surplus setup](SURPLUS.md).
 
 ## 5. Compile
 
@@ -69,10 +68,10 @@ arduino-cli upload --port PORT --fqbn esp32:esp32:esp32s3:CDCOnBoot=cdc,PSRAM=op
 
 Close serial monitors before uploading. Do not select `/dev/cu.debug-console`. If connecting fails, hold BOOT, press/release RESET, release BOOT, then retry. Upload replaces firmware; keep any existing full-device backup outside this repository. Existing NVS credentials can remain after a normal upload, so setup may already be present.
 
-Next: [configure and run](SETUP.md).
+Next: [configure and run](SURPLUS.md).
 
 Reference: [Arduino CLI getting started](https://docs.arduino.cc/arduino-cli/getting-started/).
 
-## Export validation
+## Upstream export validation
 
 The sanitized source compiled successfully using the versions above: 1,383,043 bytes of program storage (43% of the Huge APP partition), 48,676 bytes of global RAM (14%). The placeholder backend cannot execute tasks until configured. No device was flashed or physically tested during export.

@@ -15,8 +15,8 @@ def main():
     if args.mode == 'gemini':
         payload = {'command': 'configure', 'ssid': input('Wi-Fi name: '),
                    'password': getpass.getpass('Wi-Fi password: '),
-                   'key': getpass.getpass('Gemini API key: '),
-                   'model': input('Live model [gemini-3.8-live]: ') or 'gemini-3.8-live'}
+                   'key': getpass.getpass('Bridge access token (20+ characters): '),
+                   'model': 'bridge'}
         expected = 'CONFIG_SAVED'
     elif args.mode == 'hermes':
         payload = {'command': 'configure_hermes',

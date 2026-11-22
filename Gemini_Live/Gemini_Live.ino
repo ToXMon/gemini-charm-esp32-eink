@@ -18,7 +18,7 @@
 #include "src/codec_board/codec_board.h"
 #include "src/codec_board/codec_init.h"
 #include "epaper_driver_bsp.h"
-#include "google_roots.h"
+#include "local_config.h"
 
 Preferences prefs;
 WebSocketsClient ws;
@@ -179,7 +179,7 @@ void screenTask(void*) {
       canvas.setCursor(38,12);canvas.print(connectingHotspot?"Connecting hotspot":"Connecting Wi-Fi");
     }
     if(listening||speaking)iconFace(canvas,speaking);else iconHome(canvas,sleeping);
-    centeredText(canvas,listening?"Listening":speaking?"Speaking":sleeping?"Light sleep":"Gemini",146,2);
+    centeredText(canvas,listening?"Listening":speaking?"Speaking":sleeping?"Light sleep":"Surplus",146,2);
     // Keep errors and setup prompts visible; ready/connecting home stays clean.
     if(listening||speaking)centeredText(canvas,"BOOT: stop conversation",172,1);
     else if(!sleeping&&!ready&&!connectingHotspot&&!connectingWifi){
@@ -311,6 +311,7 @@ void serverMessage(const uint8_t *data,size_t len) {
   if(doc["setupComplete"].is<JsonObject>()) {
     live=true;sessionStarted=millis();status("Listening");return;
   }
+  if(doc["bridgeBusy"]==true){generating=true;status("Thinking");return;}
   handleHermesCalls(doc);
   auto content=doc["serverContent"];
   if(content["outputTranscription"]["text"].is<const char*>())
@@ -349,7 +350,7 @@ void socketEvent(WStype_t type,uint8_t *data,size_t len) {
       setup["realtimeInputConfig"]["automaticActivityDetection"]["silenceDurationMs"]=700;
       setup["realtimeInputConfig"]["automaticActivityDetection"]["startOfSpeechSensitivity"]="START_SENSITIVITY_LOW";
       setup["realtimeInputConfig"]["automaticActivityDetection"]["prefixPaddingMs"]=300;
-      sendJson(doc);status("Starting Gemini");break;
+      sendJson(doc);status("Starting bridge");break;
     }
     case WStype_TEXT:case WStype_BIN:serverMessage(data,len);break;
     case WStype_FRAGMENT_TEXT_START:case WStype_FRAGMENT_BIN_START:
@@ -372,9 +373,9 @@ void startSession() {
   if(!audioReady){status("Audio unavailable");return;}
   if(time(nullptr)<1700000000){status("Waiting for clock");return;}
   clearAudio();wanted=true;live=false;connectStarted=millis();
-  String path="/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key="+apiKey;
-  ws.beginSslWithCA("generativelanguage.googleapis.com",443,path.c_str(),GOOGLE_ROOTS,"");
-  ws.setReconnectInterval(0);status("Connecting Gemini");
+  String path="/device?key="+apiKey;
+  ws.beginSslWithCA(BRIDGE_HOST,BRIDGE_PORT,path.c_str(),HERMES_ROOTS,"");
+  ws.setReconnectInterval(0);status("Connecting bridge");
 }
 void connectWifi() {
   WiFi.mode(WIFI_STA);WiFi.begin((selectedHotspot?backupSsid:ssid).c_str(),(selectedHotspot?backupPassword:password).c_str());
@@ -580,13 +581,13 @@ void loop() {
     else if(WiFi.status()!=WL_CONNECTED&&millis()-wifiAttempt>30000){status(selectedHotspot?"Hotspot failed. Hold BOOT for home":"Home Wi-Fi failed. Check setup");WiFi.reconnect();wifiAttempt=millis();}
   }
   MicFrame frame;
-  if(audioReady&&xQueueReceive(micQueue,&frame,0)==pdTRUE&&live) {
+  if(audioReady&&xQueueReceive(micQueue,&frame,0)==pdTRUE&&live&&!playing&&!generating) {
     char encoded[1372];size_t out=0;
     mbedtls_base64_encode((uint8_t*)encoded,sizeof(encoded)-1,&out,(uint8_t*)frame.samples,sizeof(frame.samples));encoded[out]=0;
     JsonDocument doc;doc["realtimeInput"]["audio"]["mimeType"]="audio/pcm;rate=16000";
     doc["realtimeInput"]["audio"]["data"]=encoded;sendJson(doc);
   }
-  if(live&&!generating&&!playing&&lastScreen=="Speaking")status("Listening");
+  if(live&&!generating&&!playing&&(lastScreen=="Speaking"||lastScreen=="Thinking"))status("Listening");
   if(wanted||hermesPending||playing||wifiDiagnosticScan||!configured||WiFi.status()!=WL_CONNECTED)lastActivity=millis();
   if(!wanted&&!hermesPending&&!playing&&!wifiDiagnosticScan&&configured&&WiFi.status()==WL_CONNECTED&&
      digitalRead(0)==HIGH&&digitalRead(18)==HIGH&&millis()-lastActivity>=IDLE_SLEEP_MS)enterIdleSleep();
