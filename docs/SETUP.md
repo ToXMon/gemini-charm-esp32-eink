@@ -1,5 +1,7 @@
 # Step-by-step setup and use
 
+> This is the original Waveshare/Gemini guide. For the M5Stack StickS3 and Surplus, use [StickS3 setup](STICKS3.md).
+
 ## 1. Build and upload
 
 Complete [BUILD.md](BUILD.md). This firmware runs on the ESP32-S3, not as a desktop app.

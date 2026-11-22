@@ -126,3 +126,7 @@ async def device(ws: WebSocket):
                         return
     except (WebSocketDisconnect, asyncio.TimeoutError):
         pass
+
+# Import after app configuration to share auth and audio utilities.
+from bridge.stick import router as stick_router
+app.include_router(stick_router)

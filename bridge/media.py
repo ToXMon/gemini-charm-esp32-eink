@@ -57,7 +57,7 @@ def main():
             while time.monotonic() < deadline:
                 time.sleep(5)
                 r = c.get(BASE+'/music/generations/'+job_id, headers=headers); r.raise_for_status(); job = r.json()
-                if job['status'] == 'completed': break
+                if job['status'] in ('succeeded', 'completed'): break
                 if job['status'] in ('failed','expired','canceled','cancelled'): raise RuntimeError('Music generation failed: '+job['status'])
             else: raise TimeoutError('Music job timed out')
             # Artifact endpoint redirects to a signed URL; follow without sending credentials cross-origin.

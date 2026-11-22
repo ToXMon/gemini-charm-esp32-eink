@@ -15,3 +15,5 @@ build/
 .venv/
 __pycache__/
 .DS_Store
+
+StickS3/bridge_config.h
