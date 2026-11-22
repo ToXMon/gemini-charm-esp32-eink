@@ -1,5 +1,7 @@
 # Build guide
 
+> **M5Stack StickS3 owners:** This firmware is for a different ESP32-S3 board with a 200×200 e-paper display and ES7210 microphone codec. It is **not compatible with the StickS3** and has not been tested on it. Do not flash this build to a StickS3; it needs a dedicated hardware port. See [M5Stack StickS3 specifications](https://docs.m5stack.com/en/core/StickS3).
+
 ## 1. Hardware
 
 Use the original compatible ESP32-S3 board: 8 MB flash, 8 MB OPI PSRAM, ES8311 speaker codec, ES7210 microphone codec and 200×200 e-paper panel. A generic ESP32-S3 without these peripherals needs driver/pin adaptations.

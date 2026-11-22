@@ -1,5 +1,7 @@
 # Bridge and device setup
 
+> **M5Stack StickS3 owners:** This firmware is for a different ESP32-S3 board with a 200×200 e-paper display and ES7210 microphone codec. It is **not compatible with the StickS3** and has not been tested on it. Do not flash this build to a StickS3; it needs a dedicated hardware port. See [M5Stack StickS3 specifications](https://docs.m5stack.com/en/core/StickS3).
+
 Follow the original [build guide](BUILD.md) for hardware and Arduino dependencies. In this checkout, configure the bridge endpoint before compiling:
 
 ```sh

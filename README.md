@@ -1,5 +1,7 @@
 # Surplus Charm for ESP32-S3
 
+> **M5Stack StickS3 owners:** This firmware is for a different ESP32-S3 board with a 200×200 e-paper display and ES7210 microphone codec. It is **not compatible with the StickS3** and has not been tested on it. Do not flash this build to a StickS3; it needs a dedicated hardware port. See [M5Stack StickS3 specifications](https://docs.m5stack.com/en/core/StickS3).
+
 A local adaptation of [gemini-charm-esp32-eink](https://github.com/thorwebdev/gemini-charm-esp32-eink) for the same Waveshare ESP32-S3, microphone, speaker, and 200×200 e-paper device. It uses a separately hosted bridge and [Surplus Intelligence](https://www.surplusintelligence.ai/docs) for turn-based transcription, conversation, and speech. The bridge also has a command-line media generator for stories, illustrations, and instrumental music. A caregiver should review generated content before sharing it with a young child.
 
 **Status:** experimental. The firmware compiles with the pinned ESP32 toolchain. No physical device or paid Surplus API calls have been tested in this workspace. The original project's application code says no new license is granted; check rights with its author before distributing a fork. Bundled vendor licenses remain in place.
