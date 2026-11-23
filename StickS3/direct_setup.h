@@ -67,6 +67,13 @@ void readDirectSetup() {
     if(doc["command"]=="direct_status") {
       Serial.println(setupMode?"DIRECT_SETUP_READY":"DIRECT_SETUP_INACTIVE");continue;
     }
+    // Safe USB-only diagnostics: never include the network name or credentials.
+    if(doc["command"]=="direct_diagnostics") {
+      Serial.printf("DIRECT_DIAGNOSTICS wifi=%d reason=%u clock=%d configured=%d\n",
+                    (int)WiFi.status(),(unsigned)wifiFailureReason,
+                    time(nullptr)>=1700000000,configured);
+      continue;
+    }
     if(setupMode&&doc["command"]=="music_reconciled") {
       Serial.println(directReconcileMusic()?"DIRECT_MUSIC_RECONCILED":"DIRECT_MUSIC_RECONCILE_FAILED");continue;
     }

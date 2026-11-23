@@ -7,7 +7,8 @@ direct transcription, Venice decision routing, spoken response, PNG image and
 music paths. The music journal persists submit uncertainty and job IDs, and a
 saved job is polled after reconnect. The direct build was flashed to the
 connected StickS3 on 2026-11-23; the write verified and the firmware accepted
-USB configuration. Provider paths and physical media output still require
+USB configuration, joined the configured Wi-Fi and synchronized its clock.
+Provider paths and physical media output still require
 hardware acceptance tests.
 
 ## Local credentials
@@ -84,8 +85,10 @@ existing flash was privately backed up and verified. After the user granted
 full local access, serial-control ioctls succeeded; the pinned direct build was
 rebuilt and installed with the Arduino ESP32 toolchain. Bootloader, partition
 table, OTA selector and app writes all passed their flash hash checks, and the
-running firmware acknowledged USB setup and configuration. Wi-Fi and actual
-provider/device behavior still need acceptance checks. The user prefers the
+running firmware acknowledged USB setup and configuration. A follow-up build
+added secret-free USB diagnostics and showed a Wi-Fi connection and synced
+clock after an initially disconnected period. The device has not yet passed
+provider or physical media acceptance checks. The user prefers the
 assistant to handle deployment and does not want to run commands themselves. The
 upstream application states that no new license is granted for its code; check
 distribution rights before publishing further adaptations.
