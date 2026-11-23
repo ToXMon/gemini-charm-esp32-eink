@@ -1,12 +1,14 @@
 # Continue direct V1
 
-**Status: unfinished; do not flash the experimental direct build as V1.** The
+**Status: experimental; hardware acceptance is incomplete.** The
 default `StickS3/` sketch still uses the bridge. On `direct-v1-wip`, the
 `DIRECT_V1` compile path has USB-only configuration, experimental bounded
 direct transcription, Venice decision routing, spoken response, PNG image and
 music paths. The music journal persists submit uncertainty and job IDs, and a
-saved job is polled after reconnect. None of these paths has been tested on
-hardware. The existing device firmware has not been replaced.
+saved job is polled after reconnect. The direct build was flashed to the
+connected StickS3 on 2026-11-23; the write verified and the firmware accepted
+USB configuration. Provider paths and physical media output still require
+hardware acceptance tests.
 
 ## Local credentials
 
@@ -78,11 +80,12 @@ Arduino-ESP32 3.3.0 core and 3.3.12 with the repo-listed library versions. The
 host decoder parsed the returned FLAC with about 41 KiB of decoder allocations,
 and ArduinoJson parsed the actual-size image response with about 2.1 MiB of
 allocations; these are host measurements, not device memory measurements. The
-existing flash was privately backed up and verified. The local shell could not
-perform serial-control ioctls even after serial-device file access was granted;
-the M5Stack hardware tool can access the board but its installer accepts only
-its own portable-app builds, not this repository's Arduino sketch. No firmware
-was installed. The user prefers the assistant to handle deployment and does not
-want to run commands themselves. Actual device behavior remains unverified. The
+existing flash was privately backed up and verified. After the user granted
+full local access, serial-control ioctls succeeded; the pinned direct build was
+rebuilt and installed with the Arduino ESP32 toolchain. Bootloader, partition
+table, OTA selector and app writes all passed their flash hash checks, and the
+running firmware acknowledged USB setup and configuration. Wi-Fi and actual
+provider/device behavior still need acceptance checks. The user prefers the
+assistant to handle deployment and does not want to run commands themselves. The
 upstream application states that no new license is granted for its code; check
 distribution rights before publishing further adaptations.
