@@ -25,7 +25,7 @@ def amount(value):
 def validate(doc):
     if not isinstance(doc,dict) or doc.get('schema_version')!=1: raise ValueError('unsupported schema_version')
     if not isinstance(doc.get('run_id'),str) or not doc['run_id'] or not isinstance(doc.get('variant'),str) or not doc['variant']: raise ValueError('run_id and variant required')
-    if not isinstance(doc.get('dataset_id'),str) or not doc['dataset_id'] or doc.get('scope') not in {'device_end_to_end','decision_only'}: raise ValueError('dataset_id and scope required')
+    if not isinstance(doc.get('dataset_id'),str) or not doc['dataset_id'] or doc.get('scope') not in {'device_end_to_end','decision_only','host_media'}: raise ValueError('dataset_id and scope required')
     if not isinstance(doc.get('cost_capture_complete'), bool): raise ValueError('cost_capture_complete must be boolean')
     cases=doc.get('cases')
     if not isinstance(cases,list) or not cases: raise ValueError('cases must be a nonempty array')
@@ -35,8 +35,10 @@ def validate(doc):
         trial=c.get('trial'); key=(c['case_id'],trial)
         if not isinstance(trial,int) or isinstance(trial,bool) or trial<1 or key in seen: raise ValueError('invalid or duplicate case_id/trial')
         seen.add(key)
-        if c.get('expected_route') not in ROUTES or c.get('observed_route') not in ROUTES|{None}: raise ValueError('invalid route')
-        if c.get('status') not in {'completed','failed','cancelled'}: raise ValueError('invalid status')
+        if doc['scope']=='host_media':
+            if 'expected_route' not in c or c['expected_route'] is not None or c.get('observed_route') is not None: raise ValueError('host media has no routing result')
+        elif c.get('expected_route') not in ROUTES or c.get('observed_route') not in ROUTES|{None}: raise ValueError('invalid route')
+        if c.get('status') not in {'completed','failed','cancelled','unknown'}: raise ValueError('invalid status')
         review=c.get('review')
         if review not in {'accepted','rejected','pending'}: raise ValueError('invalid review')
         if c['status']!='completed' and review=='accepted': raise ValueError('failed case cannot be accepted')
@@ -78,7 +80,7 @@ def analyze(doc):
     totals={currency:{'actual':Decimal(0),'estimate':Decimal(0),'unknown':0} for currency in sorted(CURRENCIES)}
     per_stage={}; wers=[]
     for c in cases:
-        confusion[c['expected_route']][c['observed_route'] or 'missing']+=1
+        if c['expected_route'] is not None: confusion[c['expected_route']][c['observed_route'] or 'missing']+=1
         if 'expected_transcript' in c:
             w=word_error_rate(c['expected_transcript'],c['observed_transcript'])
             if w is not None: wers.append(w)
@@ -99,9 +101,10 @@ def analyze(doc):
     measured=[c for c in cases if 'expected_stages' in c]
     trajectories=sum([s['stage'] for s in c['stages']]==c['expected_stages'] and all(s['status']=='ok' for s in c['stages']) for c in measured)
     lat=[c['latency_ms'] for c in cases if c['latency_ms'] is not None]
+    routed=[c for c in cases if c['expected_route'] is not None]
     return {'schema_version':1,'run_id':doc['run_id'],'variant':doc['variant'],'dataset_id':doc['dataset_id'],'scope':doc['scope'],'case_trials':n,
-            'route_correct':sum(c['expected_route']==c['observed_route'] for c in cases),
-            'route_accuracy':sum(c['expected_route']==c['observed_route'] for c in cases)/n,
+            'route_correct':sum(c['expected_route']==c['observed_route'] for c in routed),
+            'route_accuracy':sum(c['expected_route']==c['observed_route'] for c in routed)/len(routed) if routed else None,
             'route_confusion':confusion,'trajectory':{'measured':len(measured),'passed':trajectories},'statuses':dict(Counter(c['status'] for c in cases)),
             'review':dict(Counter(c['review'] for c in cases)), 'accepted_fraction_of_all':accepted/n,
             'acceptance_among_reviewed':accepted/sum(c['review']!='pending' for c in cases) if any(c['review']!='pending' for c in cases) else None,
@@ -116,10 +119,11 @@ def compare(a,b):
     left={(c['case_id'],c['trial']):c for c in a['cases']};right={(c['case_id'],c['trial']):c for c in b['cases']}
     common=sorted(left.keys()&right.keys()); disagree=[k for k in common if left[k]['expected_route']!=right[k]['expected_route']]
     if disagree: raise ValueError('paired cases disagree on expected route')
+    routed=[k for k in common if left[k]['expected_route'] is not None]
     return {'left':a['run_id'],'right':b['run_id'],'matched':len(common),'left_only':len(left.keys()-right.keys()),'right_only':len(right.keys()-left.keys()),
-            'route_left_only_correct':sum(left[k]['observed_route']==left[k]['expected_route'] and right[k]['observed_route']!=right[k]['expected_route'] for k in common),
-            'route_right_only_correct':sum(right[k]['observed_route']==right[k]['expected_route'] and left[k]['observed_route']!=left[k]['expected_route'] for k in common),
-            'both_correct':sum(left[k]['observed_route']==left[k]['expected_route'] and right[k]['observed_route']==right[k]['expected_route'] for k in common)}
+            'route_left_only_correct':sum(left[k]['observed_route']==left[k]['expected_route'] and right[k]['observed_route']!=right[k]['expected_route'] for k in routed) if routed else None,
+            'route_right_only_correct':sum(right[k]['observed_route']==right[k]['expected_route'] and left[k]['observed_route']!=left[k]['expected_route'] for k in routed) if routed else None,
+            'both_correct':sum(left[k]['observed_route']==left[k]['expected_route'] and right[k]['observed_route']==right[k]['expected_route'] for k in routed) if routed else None}
 
 
 def load(path): return json.loads(Path(path).read_text(encoding='utf-8'))

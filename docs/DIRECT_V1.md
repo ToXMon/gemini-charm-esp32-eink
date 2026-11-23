@@ -1,6 +1,6 @@
 # Direct-device V1: Venice routing and Surplus media
 
-Goal: the StickS3 uses the phone hotspot to call Venice for decisions and Surplus for transcription and media generation, without a VPS. **Not implemented yet.** The existing `StickS3/` build still requires the bridge and must not be represented as the direct version. Keep it intact as a fallback until direct paths pass tests.
+Goal: the StickS3 uses the phone hotspot to call Venice for decisions and Surplus for transcription and media generation, without a VPS. **Incomplete and not ready to flash.** The default `StickS3/` build still requires the bridge and must not be represented as the direct version. Keep it intact as a fallback until direct paths pass tests.
 
 An isolated music submission journal is being developed in [`direct/`](../direct/README.md); it is not integrated into the existing firmware and must not be treated as direct-device support.
 

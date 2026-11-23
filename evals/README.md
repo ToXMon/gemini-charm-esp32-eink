@@ -1,6 +1,6 @@
 # Device evaluation and cost analysis
 
-This is an **offline-first analysis harness**, inspired by the DataTalksClub media course, DeepEval, and ATTEST. No API calls or model judges run when using these commands. The fixtures are **invented synthetic examples**, not measurements or a comparison claim. The direct Venice/Surplus device firmware does not yet exist and no automatic device trace capture is implemented. Until instrumentation is added, record real observations manually and retain original bills privately.
+This is an **offline-first analysis harness**, inspired by the DataTalksClub media course, DeepEval, and ATTEST. No API calls or model judges run when using these commands. The fixtures are **invented synthetic examples**, not measurements or a comparison claim. Direct Venice/Surplus firmware is incomplete, and no automatic device trace capture is implemented. Until instrumentation is added, record real observations manually and retain original bills privately.
 
 ## Try it now without credentials
 
@@ -32,6 +32,24 @@ python -m evals.analyze evals/private/surplus-run.json --compare evals/private/g
 ```
 
 The analyzer refuses mismatched scope/dataset or conflicting route labels, reports unmatched cases and never silently treats them as paired. Reports include route confusion and accuracy (missing routes count as wrong), exact stage sequence, human review counts, p50/p95 nearest-rank latency, whitespace/case-normalized word error rate (WER; punctuation still matters), and separate actual, estimated and unknown costs. Failed attempts count toward cost. P95 is unstable for small samples; do not present tiny synthetic runs as a benchmark.
+
+## Host-only media smoke checks
+
+`tools/media_smoke.py` makes paid, synthetic requests and stores private state
+and artifacts. It records an uncertain marker before each POST and refuses to
+submit the same stage again; a music job with a saved ID can be polled without
+another submission. A host result is **not** a device test. Import its state
+using the distinct `host_media` scope, which has no route accuracy:
+
+```sh
+python -m evals.import_host_media evals/private/surplus-host-smoke/state.json --run-id host-smoke-1 --dataset-id synthetic-host-v1 --transcript evals/private/surplus-host-smoke/transcript.txt --output evals/private/host-smoke-eval.json
+python -m evals.analyze evals/private/host-smoke-eval.json --output evals/private/host-smoke-report.json
+```
+
+The importer retains provider-reported cost headers as actual, leaves missing
+charges unknown, marks review pending, and does not treat music submission
+latency as generation latency. Reconcile every attempt against provider records;
+unknown, failed or pending calls are not assumed free.
 
 ## Existing decision experiment
 

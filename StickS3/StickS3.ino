@@ -8,6 +8,9 @@
 #include "esp_netif.h"
 #include <math.h>
 #include <WiFi.h>
+#ifdef DIRECT_V1
+#define ARDUINOJSON_STRING_LENGTH_SIZE 4
+#endif
 #include <ArduinoJson.h>
 #include <Preferences.h>
 #include <Adafruit_GFX.h>
@@ -20,7 +23,12 @@
 #include "epaper_driver_bsp.h"
 #endif
 #include "bridge_roots.h"
+#ifdef DIRECT_V1
+#include "venice_roots.h"
+#include "artifact_roots.h"
+#else
 #include "bridge_config.h"
+#endif
 #include <HTTPClient.h>
 #include <NetworkClientSecure.h>
 #include "screen_msg.h"
@@ -30,7 +38,11 @@
 
 // Record locally, then transcribe and create through the Surplus bridge.
 // The side button creates an image, speech or song from the recorded transcript.
+#ifdef DIRECT_V1
+const char *TRANSCRIBE_MODEL="venice-whisper-large-v3";
+#else
 const char *TRANSCRIBE_MODEL="surplus-bridge";
+#endif
 
 Preferences prefs;
 volatile uint8_t wifiFailureReason=0;
@@ -43,6 +55,9 @@ uint32_t bootPressed=0;
 bool setupMode=false;
 bool bootSetupHandled=false,bootLongStopped=false;
 String ssid, password, apiKey, serialLine, fragments;
+#ifdef DIRECT_V1
+String veniceKey, surplusKey;
+#endif
 #if defined(BOARD_M5STICKS3)
 volatile bool wantMicMode=false;
 constexpr uint8_t STICK_SPEAKER_VOL=128; // 0..255 (M5.Speaker applies quadratic scaling).
@@ -862,8 +877,14 @@ void waitPlaybackDone() {
   while(audioReady&&!genCancel&&(audioUsed>0||playing))vTaskDelay(pdMS_TO_TICKS(10));
 }
 
+void stopSession(const String &message);
+#ifdef DIRECT_V1
+#include "direct_pipeline.h"
+#include "direct_setup.h"
+#else
 #include "surplus_pipeline.h"
 #include "setup_portal.h"
+#endif
 
 // ---------- Transcription session ----------
 
@@ -900,6 +921,9 @@ void startSession() {
   if(WiFi.status()!=WL_CONNECTED){status("Wi-Fi unavailable");return;}
   if(!audioReady||!recordPcm){status("Audio memory unavailable");return;}
   if(time(nullptr)<1700000000){status("Waiting for clock");return;}
+#ifdef DIRECT_V1
+  directResetDecision();
+#endif
   recordLen=0;createAfterTranscribe=false;sessionPrompt=""; xQueueReset(micQueue);
   wanted=live=true;sessionStarted=millis();appState=APP_TRANSCRIBING;wantMicMode=true;
   showScreen(MODE_LISTEN,"RECORDING","Speak, then press A to stop or B to create",LISTEN_FOOTER,false);
@@ -920,7 +944,7 @@ void cancelGeneration() {
   if(genCancel)return;
   genCancel=true;clearAudio();
   Serial.println("GENERATE: cancel requested");
-  if(appState==APP_GENERATING)showScreen(MODE_BUSY,"Cancelling...","Waiting for bridge","",false);
+  if(appState==APP_GENERATING)showScreen(MODE_BUSY,"Cancelling...","Waiting for request","",false);
 }
 void connectWifi() {
   // SNTP must not have a DNS query pending when the first lookup clears the DNS cache (see primeNetwork).
@@ -954,7 +978,11 @@ void primeNetwork() {
   if(attempts&&millis()-lastTry<1500)return;
   lastTry=millis();attempts++;
   IPAddress ip;
+#ifdef DIRECT_V1
+  int ok=WiFi.hostByName("api.surplusintelligence.ai",ip);
+#else
   int ok=WiFi.hostByName(BRIDGE_HOST,ip);
+#endif
   Serial.printf("NET: DNS primed=%d try=%u dns=%s\n",ok==1,attempts,WiFi.dnsIP().toString().c_str());
   if(ok!=1&&attempts==2)useFallbackDns();
   if(ok!=1&&attempts<6)return; // DNS can lag the IP by a moment; SNTP waits for it.
@@ -976,6 +1004,9 @@ void selectOtherWifi() {
   wifiRestartPending=true;
 }
 void readSetup() {
+#ifdef DIRECT_V1
+  readDirectSetup();
+#else
   while(Serial.available()) {
     char c=Serial.read();
     if(c=='\n') {
@@ -1026,6 +1057,7 @@ void readSetup() {
     }else if(serialLine.length()<2048)serialLine+=c;
     else serialLine="";
   }
+#endif
 }
 void setup() {
 #if defined(BOARD_M5STICKS3)
@@ -1054,7 +1086,11 @@ void setup() {
   Serial.begin(115200);delay(1500);
   pinMode(MAIN_BUTTON_PIN,INPUT_PULLUP);pinMode(SIDE_BUTTON_PIN,INPUT_PULLUP);
   WiFi.onEvent([](WiFiEvent_t,WiFiEventInfo_t info){wifiFailureReason=info.wifi_sta_disconnected.reason;},ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+#ifdef DIRECT_V1
+  prefs.begin("directv1",false);
+#else
   prefs.begin("gemini",false);
+#endif
   activeVoiceId=prefs.getString("voice_id");activeVoiceName=prefs.getString("voice_name");
   sleepScreenReady=xSemaphoreCreateBinary();
   screenLock=xSemaphoreCreateMutex();audioMutex=xSemaphoreCreateMutex();
@@ -1100,11 +1136,20 @@ void setup() {
 #endif
   xTaskCreatePinnedToCore(genTask,"gen",20480,nullptr,1,&genHandle,0);
   recordPcm=(uint8_t*)ps_malloc(RECORD_MAX);
+#ifdef DIRECT_V1
+  configured=loadDirectConfig();
+#else
   ssid=prefs.getString("ssid");password=prefs.getString("password");apiKey=prefs.getString("key");
+#endif
   backupSsid=prefs.getString("backup_ssid");backupPassword=prefs.getString("backup_password");
   selectedHotspot=prefs.getBool("use_hotspot",false)&&!backupSsid.isEmpty();
+#ifndef DIRECT_V1
   configured=!ssid.isEmpty()&&!apiKey.isEmpty();
+#endif
   if(configured)connectWifi();else enterSetupMode();
+#ifdef DIRECT_V1
+  directMusicResume=directHasPendingMusic();
+#endif
   lastActivity=millis();
   // PWR is usually still held from powering on: treat it as already handled so its
   // release does not trigger "create" and holding on does not power straight back off.
@@ -1241,6 +1286,15 @@ void loop() {
   if(usbConnected!=lastUsbConnected){lastUsbConnected=usbConnected;batteryRefresh=true;}
   if(batteryRefresh)pushScreen();
   if(!netPrimed&&WiFi.status()==WL_CONNECTED)primeNetwork();
+#ifdef DIRECT_V1
+  if(directMusicResume&&configured&&!setupMode&&!wanted&&!genBusy&&netPrimed&&
+     WiFi.status()==WL_CONNECTED&&time(nullptr)>=1700000000&&genHandle&&
+     (int32_t)(millis()-directNextResume)>=0){
+    directMusicResume=false;directResumeRequested=true;genCancel=false;genBusy=true;appState=APP_GENERATING;
+    showScreen(MODE_BUSY,"Resuming...","Checking saved music job",MAIN_BTN_NAME ": cancel",false);
+    xTaskNotifyGive(genHandle);
+  }
+#endif
   readSetup();
   if(wifiDiagnosticScan){int n=WiFi.scanComplete();if(n>=0){bool exact=false;
     for(int i=0;i<n;i++)if(WiFi.SSID(i)==backupSsid){exact=true;Serial.printf("HOTSPOT VISIBLE: channel=%d signal=%d\n",WiFi.channel(i),WiFi.RSSI(i));}

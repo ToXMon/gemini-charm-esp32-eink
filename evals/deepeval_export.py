@@ -7,6 +7,7 @@ from evals.analyze import validate
 
 def export(doc):
     validate(doc)
+    if doc['scope']=='host_media': raise ValueError('host media runs have no routing decisions to export')
     return [{'input':'Route for case '+c['case_id'], 'actual_output':c['observed_route'] or 'MISSING',
              'expected_output':c['expected_route'], 'metadata':{'case_id':c['case_id'],'trial':c['trial'],'scope':doc['scope']}}
             for c in doc['cases']]

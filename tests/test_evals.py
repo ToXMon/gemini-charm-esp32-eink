@@ -2,6 +2,7 @@ import copy
 import unittest
 from evals.analyze import analyze, compare, validate, word_error_rate
 from evals.import_decision import convert
+from evals.import_host_media import convert as import_media
 from evals.deepeval_export import export
 from evals.cost import token_estimate, unit_estimate
 from decimal import Decimal
@@ -66,6 +67,31 @@ class EvalTests(unittest.TestCase):
         row=export(fixture())[0]
         self.assertEqual((row['actual_output'],row['expected_output']),('image','image'))
         self.assertNotIn('blue duck',str(row))
+
+    def test_host_media_does_not_invent_routing(self):
+        run=fixture();run['scope']='host_media'
+        for case in run['cases']:
+            case['expected_route']=None;case['observed_route']=None
+        report=analyze(run)
+        self.assertIsNone(report['route_accuracy'])
+        self.assertEqual(report['route_correct'],0)
+        self.assertIsNone(compare(run,copy.deepcopy(run))['both_correct'])
+        with self.assertRaises(ValueError): export(run)
+        run['cases'][0]['observed_route']='image'
+        with self.assertRaises(ValueError):validate(run)
+
+    def test_host_media_import_preserves_unknown_cost_and_unfinished_job(self):
+        state={'speech':{'status':'succeeded','latency_ms':100,'actual_usd':'0.02'},
+               'song':{'status':'http_error','latency_ms':2},
+               'song_default':{'status':'queued','latency_ms':5,'job_id':'synthetic'}}
+        run=import_media(state,'host','synthetic')
+        report=analyze(run)
+        self.assertIsNone(report['route_accuracy'])
+        self.assertEqual(report['costs']['usd']['known_actual'],'0.02')
+        self.assertEqual(report['costs']['usd']['unknown_stage_count'],2)
+        self.assertEqual(run['cases'][2]['status'],'unknown')
+        self.assertIsNone(run['cases'][2]['latency_ms'])
+        self.assertIsNone(report['costs']['usd']['actual_cost_per_accepted'])
 
     def test_cost_estimates_use_exact_units(self):
         self.assertEqual(token_estimate(1000,200,'1.20','4'),Decimal('0.0020'))
