@@ -75,6 +75,18 @@ void readDirectSetup() {
       continue;
     }
     if(doc["command"]=="direct_music_diagnostics") {directMusicDiagnostics();continue;}
+    if(doc["command"]=="direct_wifi_scan") {
+      if(genBusy||wanted||WiFi.status()==WL_CONNECTED){Serial.println("DIRECT_WIFI_SCAN busy");continue;}
+      int count=WiFi.scanNetworks(false,true),matches=0,channel=0,rssi=0,auth=-1;
+      if(count>=0){
+        const String &target=selectedHotspot?backupSsid:ssid;
+        for(int i=0;i<count;i++)if(WiFi.SSID(i)==target){
+          matches++;channel=WiFi.channel(i);rssi=WiFi.RSSI(i);auth=(int)WiFi.encryptionType(i);
+        }
+      }
+      Serial.printf("DIRECT_WIFI_SCAN count=%d matches=%d channel=%d rssi=%d auth=%d\n",count,matches,channel,rssi,auth);
+      WiFi.scanDelete();continue;
+    }
     if(setupMode&&doc["command"]=="music_reconciled") {
       Serial.println(directReconcileMusic()?"DIRECT_MUSIC_RECONCILED":"DIRECT_MUSIC_RECONCILE_FAILED");continue;
     }

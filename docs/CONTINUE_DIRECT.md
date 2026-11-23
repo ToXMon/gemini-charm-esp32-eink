@@ -82,7 +82,9 @@ The revised build raises the bounded FLAC limit to 6 MiB, temporarily releases
 the recording buffer during music playback, and restores it afterward. It
 retains a 65-second duration limit and 1 MiB decoder allocation budget. This
 change compiled and was written and hash-verified on the board after manual
-bootloader entry. Restart and playback still need confirmation. These limits
+bootloader entry. The revised firmware booted and the original job remained
+identified, but the hotspot connection timed out during authentication, so
+playback has not yet been tested. These limits
 still need measurements on the board, including TLS, PSRAM and
 task stack high-water marks. `tools/reconcile_music.py` clears a saved or
 uncertain job only after the user explicitly checks the provider outcome.
