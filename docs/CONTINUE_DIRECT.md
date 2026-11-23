@@ -71,8 +71,19 @@ charge as unknown. Do not resubmit the existing job. State and generated files a
 
 The experimental music downloader allows only the currently observed Surplus S3
 artifact host and verifies Amazon Root CA 1; another host or unsupported format
-fails visibly. FLAC is limited to 4.5 MiB and 65 seconds with a 1 MiB decoder
-budget. These limits need measurements on the board, including TLS, PSRAM and
+fails visibly. A real device song job succeeded at Surplus, but its 5,763,633-byte
+ID3-tagged FLAC exceeded the original 4.5 MiB limit and playback failed. The
+existing job was saved, privately retrieved and decoded on the host; no new
+song submission was made. Surplus reported 0.0225 USDC as captured; independent
+settlement and the full run's other charges remain unreconciled. The private
+device eval records its cost as unknown pending reconciliation.
+
+The revised build raises the bounded FLAC limit to 6 MiB, temporarily releases
+the recording buffer during music playback, and restores it afterward. It
+retains a 65-second duration limit and 1 MiB decoder allocation budget. This
+change compiled but has not yet been installed or tested on the board; the last
+upload attempt could not enter the bootloader and wrote nothing. These limits
+still need measurements on the board, including TLS, PSRAM and
 task stack high-water marks. `tools/reconcile_music.py` clears a saved or
 uncertain job only after the user explicitly checks the provider outcome.
 

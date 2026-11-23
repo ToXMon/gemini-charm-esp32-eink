@@ -241,6 +241,7 @@ void directImage(const String &prompt){
 
 // The FLAC decoder is bounded to a separate 1 MiB PSRAM allocation budget.
 // This helper is not called until the music job/download path is implemented.
+constexpr size_t MAX_DIRECT_FLAC=6*1024*1024;
 struct DirectFlacBudget {
   struct alignas(8) Header {size_t size;};
   size_t used=0;static constexpr size_t limit=1024*1024;
@@ -264,7 +265,7 @@ struct DirectFlacBudget {
   }
 };
 bool directPlayFlac(const uint8_t *data,size_t len){
-  if(!data||!len||len>4608*1024)return false;
+  if(!data||!len||len>MAX_DIRECT_FLAC)return false;
   DirectFlacBudget budget;
   drflac_allocation_callbacks callbacks={&budget,DirectFlacBudget::allocate,DirectFlacBudget::resize,DirectFlacBudget::release};
   drflac *flac=drflac_open_memory(data,len,&callbacks);

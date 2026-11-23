@@ -74,6 +74,7 @@ void readDirectSetup() {
                     time(nullptr)>=1700000000,configured);
       continue;
     }
+    if(doc["command"]=="direct_music_diagnostics") {directMusicDiagnostics();continue;}
     if(setupMode&&doc["command"]=="music_reconciled") {
       Serial.println(directReconcileMusic()?"DIRECT_MUSIC_RECONCILED":"DIRECT_MUSIC_RECONCILE_FAILED");continue;
     }

@@ -15,6 +15,19 @@ bool directReconcileMusic(){
   direct::NvsMusicStore store(handle);direct::MusicJournal journal(store);
   bool ok=journal.load()&&journal.acknowledge_reconciled();nvs_close(handle);return ok;
 }
+// Local USB diagnostics may report a job identifier, never a key or prompt.
+// Refuse while the worker is active so the record is not inspected mid-update.
+void directMusicDiagnostics(){
+  if(genBusy){Serial.println("DIRECT_MUSIC_STATE busy");return;}
+  nvs_handle_t handle;
+  if(nvs_open("directmusic",NVS_READWRITE,&handle)!=ESP_OK){Serial.println("DIRECT_MUSIC_STATE storage_error");return;}
+  direct::NvsMusicStore store(handle);direct::MusicJournal journal(store);
+  if(!journal.load())Serial.println("DIRECT_MUSIC_STATE unreadable");
+  else if(journal.phase()==direct::Phase::uncertain)Serial.println("DIRECT_MUSIC_STATE uncertain");
+  else if(journal.phase()==direct::Phase::identified)Serial.printf("DIRECT_MUSIC_STATE identified %s\n",journal.job_id());
+  else Serial.println("DIRECT_MUSIC_STATE empty");
+  nvs_close(handle);
+}
 DirectMusicOutcome directMusic(const String &prompt){
   nvs_handle_t handle;
   if(nvs_open("directmusic",NVS_READWRITE,&handle)!=ESP_OK){appState=APP_READY;status("Music storage error");return DirectMusicOutcome::attention;}
@@ -61,23 +74,35 @@ DirectMusicOutcome directMusic(const String &prompt){
       if(!location){free(buffer);nvs_close(handle);appState=APP_READY;status("Memory unavailable");return DirectMusicOutcome::attention;}
       String artifact=String("/v1/media/artifacts/")+job+"/0";n=0;
       ok=directJsonRequest("api.surplusintelligence.ai",HERMES_ROOTS,"GET",artifact.c_str(),surplusKey,"",buffer,MAX_JSON,n,302,location,2048);
+      Serial.printf("DIRECT_MUSIC_STAGE artifact_redirect=%d\n",ok);
       const char *path=nullptr;
       if(ok)ok=direct::artifact_path(location,path);
-      constexpr size_t MAX_FLAC=4608*1024;
-      uint8_t *audio=ok?(uint8_t*)ps_malloc(MAX_FLAC):nullptr;
+      Serial.printf("DIRECT_MUSIC_STAGE artifact_origin=%d\n",ok);
+      // Recording and music playback are exclusive. Release the recording
+      // buffer while holding a bounded larger artifact, then restore it.
+      bool releasedRecording=false;
+      if(ok&&recordPcm){free(recordPcm);recordPcm=nullptr;recordLen=0;releasedRecording=true;}
+      uint8_t *audio=ok?(uint8_t*)ps_malloc(MAX_DIRECT_FLAC):nullptr;
       if(!audio)ok=false;
+      Serial.printf("DIRECT_MUSIC_STAGE audio_buffer=%d\n",audio!=nullptr);
       n=0;
-      if(ok)ok=directJsonRequest(direct::ARTIFACT_HOST,ARTIFACT_ROOTS,"GET",path,"","",audio,MAX_FLAC,n);
+      if(ok)ok=directJsonRequest(direct::ARTIFACT_HOST,ARTIFACT_ROOTS,"GET",path,"","",audio,MAX_DIRECT_FLAC,n);
+      Serial.printf("DIRECT_MUSIC_STAGE audio_download=%d bytes=%u\n",ok,(unsigned)n);
       free(location);
       if(ok&&!genCancel){
         appState=APP_PLAYING;showScreen(MODE_PANEL,"SONG",prompt.isEmpty()?String("Generated song"):prompt,MAIN_BTN_NAME ": stop",true);
         ok=directPlayFlac(audio,n);
+        Serial.printf("DIRECT_MUSIC_STAGE playback=%d\n",ok);
       }
       free(audio);
+      if(releasedRecording)recordPcm=(uint8_t*)ps_malloc(RECORD_MAX);
+      bool recordReady=recordPcm!=nullptr;
+      Serial.printf("DIRECT_MUSIC_STAGE recording_buffer=%d\n",recordReady);
       if(!ok){free(buffer);nvs_close(handle);appState=APP_READY;status(genCancel?"Song stopped; job saved":"Song download or format failed");return DirectMusicOutcome::attention;}
       bool saved=journal.acknowledge_reconciled();
       free(buffer);nvs_close(handle);appState=APP_RESULT;
-      if(saved)showScreen(MODE_PANEL,"SONG","Song finished",RESULT_FOOTER,true);
+      if(saved&&recordReady)showScreen(MODE_PANEL,"SONG","Song finished",RESULT_FOOTER,true);
+      else if(saved)status("Song finished; restart to record");
       else {appState=APP_READY;status("Music storage error");}
       return saved?DirectMusicOutcome::finished:DirectMusicOutcome::attention;
     }
