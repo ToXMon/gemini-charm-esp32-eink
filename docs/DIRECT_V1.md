@@ -2,6 +2,8 @@
 
 Goal: the StickS3 uses the phone hotspot to call Venice for decisions and Surplus for transcription and media generation, without a VPS. **Not implemented yet.** The existing `StickS3/` build still requires the bridge and must not be represented as the direct version. Keep it intact as a fallback until direct paths pass tests.
 
+An isolated music submission journal is being developed in [`direct/`](../direct/README.md); it is not integrated into the existing firmware and must not be treated as direct-device support.
+
 1. Provision separately scoped Surplus and Venice API keys on the device via the setup flow, not in source code. Store in NVS; document that physical access or unencrypted flash may expose it. Use HTTPS with the correct verified CA, a configurable model allowlist, and avoid secrets in logs and URLs. Budget limits must be enforced at the account/key where available; a local counter is only advisory.
 2. Upload bounded 16 kHz WAV microphone audio as multipart to `/v1/audio/transcriptions`; account for content-length, timeouts and limited memory. The documented route is file transcription; do not promise Gemini Live interim results without a separately verified streaming API.
 3. Classify the transcript as `image`, `song`, `speech`, or `clarify` using the lowest estimated-cost eligible Venice decision model from the account-specific catalog (JEV format), falling back safely if none meets capability or price constraints; account for beta access, provider errors, and calibrated thresholds validated on held-out data. On errors or low confidence, ask for clarification rather than silently start an expensive generation. Do not mistake a classifier's label for a response or image prompt.
