@@ -84,7 +84,11 @@ retains a 65-second duration limit and 1 MiB decoder allocation budget. This
 change compiled and was written and hash-verified on the board after manual
 bootloader entry. The revised firmware booted and the original job remained
 identified, but the hotspot connection timed out during authentication, so
-playback has not yet been tested. These limits
+playback has not yet been tested. A subsequent USB-only scan found ten nearby
+networks but no exact match for the configured hotspot; the user reported
+matching credentials and enabling iPhone hotspot compatibility. The diagnostic
+scan build was installed and verified. Opening the serial port may reset the
+device, so leave it open while entering setup before issuing a scan. These limits
 still need measurements on the board, including TLS, PSRAM and
 task stack high-water marks. `tools/reconcile_music.py` clears a saved or
 uncertain job only after the user explicitly checks the provider outcome.
