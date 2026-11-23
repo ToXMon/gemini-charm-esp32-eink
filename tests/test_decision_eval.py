@@ -22,4 +22,17 @@ class DecisionEvaluationTests(unittest.TestCase):
         self.assertEqual(rows[1]['status'],'refusal_or_invalid')
         self.assertIsNone(rows[1]['choice'])
 
+    def test_venice_jev_contract(self):
+        import json
+        def handler(request):
+            self.assertEqual(request.url.host,'api.venice.ai')
+            body=json.loads(request.content)
+            self.assertEqual(body['state'],'draw')
+            self.assertIn('image',body['questions']['route']['criteria'])
+            return httpx.Response(200,json={'answers':{'route':{'type':'choice','choice':'image','confidence':.9}}})
+        with httpx.Client(transport=httpx.MockTransport(handler)) as client:
+            rows=module.evaluate(client,'clef-api',[{'id':'one','input':'draw','expected':'image'}],'venice','jev')
+        self.assertEqual(rows[0]['choice'],'image')
+        self.assertEqual(rows[0]['confidence'],.9)
+
 if __name__=='__main__': unittest.main()
