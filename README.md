@@ -2,7 +2,7 @@
 
 An experimental Surplus-powered adaptation of Thor's [M5StickS3 transcription and media branch](https://github.com/thorwebdev/gemini-charm-esp32-eink/tree/thor/m5sticks3-transcribe-plus-plus). Press **A** to record a request, then **B** to transcribe and create: the bridge classifies the transcript and returns spoken audio, a color image, or music to the StickS3. The bridge uses Surplus for inference; its API key stays on the host. Thor's original application sources state no new license is granted; confirm distribution rights with the author. Vendor sources retain their licenses.
 
-> **V1 direction:** Direct StickS3-to-Surplus operation is planned but not implemented. The current StickS3 firmware below still requires a bridge. See [direct V1 plan](docs/DIRECT_V1.md) and the [decision-routing experiment](experiments/decision-routing/README.md).
+> **V1 direction:** Direct StickS3-to-Surplus media generation and Venice decision routing are planned but not implemented. The current StickS3 firmware below still requires a bridge. See [direct V1 plan](docs/DIRECT_V1.md) and the [decision-routing experiment](experiments/decision-routing/README.md).
 
 **Status:** experimental and not yet tested on physical hardware or against a funded Surplus account. The StickS3 firmware compiles with the dependencies below; the older `Gemini_Live/` sketch targets a different Waveshare e-paper board and must not be flashed to a StickS3. Built artifacts containing the example bridge hostname are not configured for your host.
 

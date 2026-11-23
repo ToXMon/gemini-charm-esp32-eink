@@ -35,4 +35,14 @@ class DecisionEvaluationTests(unittest.TestCase):
         self.assertEqual(rows[0]['choice'],'image')
         self.assertEqual(rows[0]['confidence'],.9)
 
+    def test_selects_lowest_diem_cost_from_supported_online_models(self):
+        def model(name, input_price, output_price, offline=False):
+            return {'id':name,'type':'decision','model_spec':{'offline':offline,'pricing':{'input':{'diem':input_price},'output':{'diem':output_price}}}}
+        catalog={'data':[model('jev-latest',.042,0),model('clef-api',.05,.05),model('untested',0,0)]}
+        self.assertEqual(module.cheapest_venice_model(catalog),'jev-latest')
+        catalog['data'][0]['model_spec']['offline']=True
+        self.assertEqual(module.cheapest_venice_model(catalog),'clef-api')
+        catalog['data'][1]['model_spec']['offline']=True
+        with self.assertRaises(ValueError): module.cheapest_venice_model(catalog)
+
 if __name__=='__main__': unittest.main()

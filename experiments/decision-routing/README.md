@@ -25,3 +25,5 @@ python experiments/decision-routing/evaluate.py --provider surplus --dialect jev
 ```
 
 Each command can incur charges for each case. The JEV and OpenAI-format paths are covered by mocked tests but have not been validated with live paid calls. Compare actual bills, not just catalog rates, and report failures/refusals as well as accuracy. Venice's DIEM is an inference-credit mechanism, not a decision model or an endpoint; opportunity costs and credit utilization still matter.
+
+To select the lowest estimated DIEM price from supported, explicitly listed online candidates in your authenticated Venice catalog snapshot, pass `--model auto --provider venice --dialect jev`. Selection uses an assumed 1,000 input and 100 output tokens; it is not an actual quote or a quality guarantee. Unknown models, missing prices and models marked offline are excluded. The chosen model is recorded in the results. This selection exists only in this experiment, **not yet in the StickS3 firmware**.
