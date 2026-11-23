@@ -41,7 +41,9 @@ expected image route in 221 ms. The repository's 12-case synthetic routing set
 also returned 12 correct routes, with 216.5 ms median and 763 ms p95. This small,
 non-held-out host set is not a calibrated benchmark or a hardware result. The
 original results and analyzer outputs are under Git-ignored `evals/private/`;
-actual DIEM charges remain unknown until reconciled. The repeatable command
+actual DIEM charges remain unknown until reconciled. The supplied inference key
+returned HTTP 401 for the read-only Venice usage-history endpoint; do not infer
+charges from token counts or a changing balance. The repeatable command
 `.venv/bin/python tools/decision_smoke.py --run-paid` makes one chargeable request
 and does not automatically retry. Its marker remains when a submission's outcome
 is uncertain. Treat the marker as a possible charge, not a safe invitation to
@@ -80,6 +82,7 @@ existing flash was privately backed up and verified. The local shell could not
 perform serial-control ioctls even after serial-device file access was granted;
 the M5Stack hardware tool can access the board but its installer accepts only
 its own portable-app builds, not this repository's Arduino sketch. No firmware
-was installed. Actual device behavior remains unverified. The
+was installed. The user prefers the assistant to handle deployment and does not
+want to run commands themselves. Actual device behavior remains unverified. The
 upstream application states that no new license is granted for its code; check
 distribution rights before publishing further adaptations.
