@@ -1,0 +1,14 @@
+[
+  {"id":"image_1","input":"Draw a bright blue duck for my toddler.","expected":"image"},
+  {"id":"image_2","input":"Show me a picture of a sleepy moon.","expected":"image"},
+  {"id":"song_1","input":"Make a gentle bedtime song about ducks.","expected":"song"},
+  {"id":"song_2","input":"Compose a short instrumental lullaby.","expected":"song"},
+  {"id":"speech_1","input":"Tell me a short bedtime story about a duck.","expected":"speech"},
+  {"id":"speech_2","input":"What sound does a cow make?","expected":"speech"},
+  {"id":"clarify_1","input":"Make something about a duck.","expected":"clarify"},
+  {"id":"clarify_2","input":"Make that again but different.","expected":"clarify"},
+  {"id":"mixed_1","input":"Draw a duck singing a song.","expected":"image"},
+  {"id":"mixed_2","input":"Sing a song about a picture of a duck.","expected":"song"},
+  {"id":"speech_3","input":"Say the words sing a song, but do not make music.","expected":"speech"},
+  {"id":"image_3","input":"Make a picture book cover with no music or narration.","expected":"image"}
+]
