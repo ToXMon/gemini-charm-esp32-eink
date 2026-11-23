@@ -81,8 +81,8 @@ device eval records its cost as unknown pending reconciliation.
 The revised build raises the bounded FLAC limit to 6 MiB, temporarily releases
 the recording buffer during music playback, and restores it afterward. It
 retains a 65-second duration limit and 1 MiB decoder allocation budget. This
-change compiled but has not yet been installed or tested on the board; the last
-upload attempt could not enter the bootloader and wrote nothing. These limits
+change compiled and was written and hash-verified on the board after manual
+bootloader entry. Restart and playback still need confirmation. These limits
 still need measurements on the board, including TLS, PSRAM and
 task stack high-water marks. `tools/reconcile_music.py` clears a saved or
 uncertain job only after the user explicitly checks the provider outcome.
