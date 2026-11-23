@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "run_id": "SYNTHETIC-venice-surplus",
+  "variant": "venice-surplus-example",
+  "cost_capture_complete": false,
+  "cases": [
+    {
+      "case_id": "image_1",
+      "trial": 1,
+      "expected_route": "image",
+      "observed_route": "image",
+      "status": "completed",
+      "review": "accepted",
+      "latency_ms": 4500,
+      "expected_stages": [
+        "transcribe",
+        "decision",
+        "image"
+      ],
+      "stages": [
+        {
+          "stage": "transcribe",
+          "status": "ok",
+          "cost": {
+            "currency": "usd",
+            "kind": "actual",
+            "amount": "0.001"
+          }
+        },
+        {
+          "stage": "decision",
+          "status": "ok",
+          "cost": {
+            "currency": "diem_credit",
+            "kind": "actual",
+            "amount": "0.0001"
+          }
+        },
+        {
+          "stage": "image",
+          "status": "ok",
+          "cost": {
+            "currency": "usd",
+            "kind": "actual",
+            "amount": "0.002"
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "song_1",
+      "trial": 1,
+      "expected_route": "song",
+      "observed_route": "song",
+      "status": "failed",
+      "review": "pending",
+      "latency_ms": 18000,
+      "expected_stages": [
+        "transcribe",
+        "decision",
+        "music"
+      ],
+      "stages": [
+        {
+          "stage": "transcribe",
+          "status": "ok",
+          "cost": {
+            "currency": "usd",
+            "kind": "estimate",
+            "amount": "0.001"
+          }
+        },
+        {
+          "stage": "decision",
+          "status": "ok",
+          "cost": {
+            "currency": "diem_credit",
+            "kind": "unknown",
+            "amount": null
+          }
+        },
+        {
+          "stage": "music",
+          "status": "failed",
+          "cost": {
+            "currency": "usd",
+            "kind": "unknown",
+            "amount": null
+          }
+        }
+      ]
+    }
+  ],
+  "dataset_id": "SYNTHETIC-DEMO-1",
+  "scope": "device_end_to_end"
+}

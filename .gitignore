@@ -17,3 +17,6 @@ __pycache__/
 .DS_Store
 
 StickS3/bridge_config.h
+
+# Local evaluation evidence may contain private audio, transcripts, or billing data.
+evals/private/

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "run_id": "SYNTHETIC-gemini",
+  "variant": "gemini-example",
+  "cost_capture_complete": false,
+  "cases": [
+    {
+      "case_id": "image_1",
+      "trial": 1,
+      "expected_route": "image",
+      "observed_route": "image",
+      "status": "completed",
+      "review": "pending",
+      "latency_ms": 3900,
+      "stages": [
+        {
+          "stage": "image",
+          "status": "ok",
+          "cost": {
+            "currency": "usd",
+            "kind": "unknown",
+            "amount": null
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "song_1",
+      "trial": 1,
+      "expected_route": "song",
+      "observed_route": "speech",
+      "status": "completed",
+      "review": "rejected",
+      "latency_ms": 5000,
+      "stages": [
+        {
+          "stage": "speech",
+          "status": "ok",
+          "cost": {
+            "currency": "usd",
+            "kind": "unknown",
+            "amount": null
+          }
+        }
+      ]
+    }
+  ],
+  "dataset_id": "SYNTHETIC-DEMO-1",
+  "scope": "device_end_to_end"
+}

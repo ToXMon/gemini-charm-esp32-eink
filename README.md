@@ -46,6 +46,10 @@ The config header is ignored by Git. Replace `PORT` with the detected serial por
 
 On first boot, use the on-screen QR setup to join the temporary setup network and enter your 2.4 GHz Wi-Fi and **bridge token**, not the Surplus key. The setup portal is a local unencrypted access point; use it in a trusted place, and hold A for 10 seconds to configure again. Then press A, say a request, and press B. Check volume at a low setting and have a caregiver review generated content before sharing with a child. Requests and audio go to Surplus and its selected sellers. Hardware and live-provider behavior remain unverified.
 
+## Evaluate quality and cost
+
+Use the [offline evaluation guide](evals/README.md) to try synthetic fixtures now and later record paired device results, caregiver reviews, routing, latency and separate Surplus USD/Venice DIEM charges. No real device capture or paid benchmark is included yet. The [direct-device V1](docs/DIRECT_V1.md) remains unimplemented.
+
 ## Tests and host media
 
 ```sh
